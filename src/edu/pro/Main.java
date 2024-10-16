@@ -1,71 +1,46 @@
 package edu.pro;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets; // Додано
 import java.nio.file.Files;
+import java.nio.file.Path; // Змінено на Path
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main {
 
     public static String cleanText(String url) throws IOException {
-        String content = new String(Files.readAllBytes(Paths.get(url)));
-        content = content.replaceAll("[^A-Za-z ]"," ").toLowerCase(Locale.ROOT);
-        return content;
+        // Зчитування файлу з вказаним кодуванням (наприклад, UTF-8)
+        return Files.readString(Path.of(url), StandardCharsets.UTF_8)
+                .replaceAll("[^A-Za-z ]", " ")
+                .toLowerCase(Locale.ROOT);
     }
 
     public static void main(String[] args) throws IOException {
-
         LocalDateTime start = LocalDateTime.now();
-       // Path path = Paths.get()
-        String content = new String(Files.readAllBytes(Paths.get("src/edu/pro/txt/harry.txt")));
 
-        content = content.replaceAll("[^A-Za-z ]"," ").toLowerCase(Locale.ROOT);
+        String content = cleanText("src/edu/pro/txt/harry.txt");
+        String[] words = content.split("\\s+");
 
-        String[] words = content.split(" +"); // 400 000
-
-        Arrays.sort(words);
-
-        String distinctString = " ";
-
-        for (int i = 0; i < words.length ; i++) {
-            if (!distinctString.contains(words[i])){
-                distinctString+= words[i] + " ";
+        Map<String, Integer> frequencyMap = new HashMap<>();
+        for (String word : words) {
+            if (!word.isBlank()) {
+                frequencyMap.merge(word, 1, Integer::sum);
             }
         }
 
-        String[] distincts = distinctString.split(" ");
-        int[] freq = new int[distincts.length];
+        List<Map.Entry<String, Integer>> sortedWords = new ArrayList<>(frequencyMap.entrySet());
+        sortedWords.sort(Map.Entry.comparingByValue(Collections.reverseOrder()));
 
-        for (int i = 0; i < distincts.length ; i++) {
-            int count = 0;
-            for (int j = 0; j < words.length ; j++) {
-                if (distincts[i].equals(words[j])) {
-                    count++;
-                }
-            }
-            freq[i] = count;
-        }
+        sortedWords.stream().limit(30).forEach(entry ->
+                System.out.println(entry.getKey() + " " + entry.getValue())
+        );
 
-        for (int i = 0; i < distincts.length ; i++) { // 5 000
-            distincts[i] += " " + freq[i];
-        }
-
-        Arrays.sort(distincts, Comparator.comparing(str
-                -> Integer.valueOf(str.replaceAll("[^0-9]", ""))));
-
-        for (int i = 0; i < 30; i++) {
-            System.out.println(distincts[distincts.length - 1 - i]);
-        }
         LocalDateTime finish = LocalDateTime.now();
-
         System.out.println("------");
         System.out.println(ChronoUnit.MILLIS.between(start, finish));
-
     }
 }
